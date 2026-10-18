@@ -97,17 +97,26 @@ FINDINGS = {"HTN": "hypertension", "DM": "diabetes mellitus", "DLP": "dyslipidem
             "LVH": "left ventricular hypertrophy", "St Depression": "ST depression",
             "St Elevation": "ST elevation", "Tinversion": "T wave inversion", "Q Wave": "Q wave"}
 
-def explain_patient(row):
+def explain_patient(row, note=""):
     import pandas as pd
     df = pd.read_excel(next(Path("data").glob("*.xlsx")), sheet_name=0)
     p = df.iloc[row]
     present = [t for col, t in FINDINGS.items() if col in p and str(p[col]).strip() in ("Y", "1")]
     if str(p.get("Region RWMA", 0)) not in ("0", "0.0"): present.append("regional wall motion abnormality")
-    print(f"Medical findings listed in patient {row}'s record, in plain English:\n")
+    print(f"Medical findings listed in patient {row}'s record{note}, in plain English:\n")
     for t in present: print(f"- {explain(t)}\n")
     if not present: print("None of the findings we can explain were listed.")
     print("This is general information, not a diagnosis. A doctor can tell you what these mean for you.")
 
+def explain_cad_patient(n=1):
+    """Pick the n-th patient (1 = first) whose record is labelled CAD, and explain only that person."""
+    import pandas as pd
+    df = pd.read_excel(next(Path("data").glob("*.xlsx")), sheet_name=0)
+    cad_rows = df.index[df["Cath"].astype(str).str.strip() == "CAD"].tolist()
+    if not 1 <= n <= len(cad_rows): sys.exit(f"Choose a number from 1 to {len(cad_rows)}.")
+    explain_patient(cad_rows[n - 1], note=" (a patient confirmed to have CAD by an angiogram)")
+
 if __name__ == "__main__":
-    if len(sys.argv) > 2 and sys.argv[1] == "patient": explain_patient(int(sys.argv[2]))
+    if len(sys.argv) > 1 and sys.argv[1] == "cad": explain_cad_patient(int(sys.argv[2]) if len(sys.argv) > 2 else 1)
+    elif len(sys.argv) > 2 and sys.argv[1] == "patient": explain_patient(int(sys.argv[2]))
     else: print(explain(" ".join(sys.argv[1:]) or "tachycardia"))
