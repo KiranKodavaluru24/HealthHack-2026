@@ -19,6 +19,10 @@ KNOWN = {
     "regional wall motion abnormality": "part of the heart wall not moving normally",
     "st depression": "ST depression on the heart tracing", "st elevation": "ST elevation on the heart tracing",
     "t wave inversion": "flipped T wave on the heart tracing", "q wave": "Q wave on the heart tracing",
+    # Added Vitals & Lab Risk Factors
+    "bp": "blood pressure", "fbs": "fasting blood sugar", "ldl": "bad cholesterol",
+    "hdl": "good cholesterol", "tg": "triglycerides", "bmi": "body mass index",
+    "ef-tte": "heart pumping efficiency"
 }
 
 # 2) Word parts, used as a backup for terms not in KNOWN
@@ -37,7 +41,7 @@ def split_term(term):
     suffix = next((s for s in sorted(SUFFIX, key=len, reverse=True) if t.endswith(s)), None)
     if suffix: t = t[:-len(suffix)]
     roots, i = [], 0
-    while i < len(t):                                   # read roots left to right, skipping joining vowels
+    while i < len(t):                            # read roots left to right, skipping joining vowels
         r = next((r for r in sorted(ROOT, key=len, reverse=True) if t.startswith(r, i)), None)
         if r: roots.append(r); i += len(r)
         elif t[i] in "aeiou": i += 1
@@ -79,6 +83,14 @@ CAD_MEANING = {
     "irregular heartbeat": "An irregular heartbeat can happen when part of the heart is short of blood. It also has many other causes.",
     "not enough blood flow": "This is what happens in the heart when its arteries are narrowed. It is the central problem in coronary artery disease.",
     "Q wave on the heart tracing": "A Q wave can be a sign of an old heart attack or scarring of the heart muscle.",
+    # Vitals & Labs Explanations
+    "blood pressure": "Measures the force of blood pushing against your artery walls. High pressure strains arteries and accelerates fatty plaque build-up.",
+    "fasting blood sugar": "Measures sugar levels in your blood. High levels over time can slowly damage blood vessels and increase CAD risk.",
+    "bad cholesterol": "Low-density lipoprotein (LDL) can build up inside the heart's arteries and narrow them.",
+    "good cholesterol": "High-density lipoprotein (HDL) helps clear excess cholesterol away from your arteries.",
+    "triglycerides": "A type of fat found in your blood. High levels contribute to hardening and narrowing of the arteries.",
+    "body mass index": "Measures weight relative to height. Higher BMI can put extra strain on the cardiovascular system.",
+    "heart pumping efficiency": "Ejection fraction measures how efficiently your heart pumps blood with each beat. Lower values indicate a weaker heart pump."
 }
 FALLBACK = "We don't have a plain-English note for this finding. Ask a doctor how it relates to heart disease."
 
