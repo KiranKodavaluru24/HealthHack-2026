@@ -18,10 +18,10 @@ st.markdown("""
 
 # App Header
 st.markdown('<div class="main-title">🫀 SimplyStats</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Check a record • How it works • All records</div>', unsafe_allow_html=True)
-st.markdown('<div class="disclaimer">⚠️ Research demo. Not medical advice. Every explanation is designed to help patients understand medical terminology in plain English.</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Personal Health Dashboard • Heart Health Vitals</div>', unsafe_allow_html=True)
+st.markdown('<div class="disclaimer">⚠️ Research demo. Not medical advice. Every explanation is designed to help you understand your health metrics in plain English.</div>', unsafe_allow_html=True)
 
-# Load dataset
+# Load dataset and pick the default single profile record (e.g. index 0)
 @st.cache_data
 def load_data():
     xlsx = next(Path("data").glob("*.xlsx"))
@@ -33,23 +33,23 @@ except Exception as e:
     st.error(f"Dataset not found in 'data/' folder. Run connect_check.py first. Error: {e}")
     st.stop()
 
-# Sidebar: Patient Selector
-st.sidebar.header("🔍 Patient Record Selector")
-cad_rows = df.index[df["Cath"].astype(str).str.strip() == "CAD"].tolist()
-patient_choice = st.sidebar.selectbox("Select Confirmed CAD Patient #", range(1, len(cad_rows) + 1))
+# Lock to a single individual record
+p = df.iloc[0]
 
-selected_row_idx = cad_rows[patient_choice - 1]
-p = df.iloc[selected_row_idx]
+# Display Profile Summary Info at the top
+st.markdown(f"""
+<div style="background-color: #f8fafc; padding: 1rem 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+    <span style="font-weight: 600; color: #334155; font-size: 1.1rem;">Patient Profile</span> &nbsp;|&nbsp; 
+    <span>Age: <b>{p.get('Age')}</b></span> &nbsp;|&nbsp; 
+    <span>Sex: <b>{p.get('Sex')}</b></span>
+</div>
+""", unsafe_allow_html=True)
 
-st.sidebar.markdown(f"**Patient Index:** `{selected_row_idx}`")
-st.sidebar.markdown(f"**Age:** {p.get('Age')} | **Sex:** {p.get('Sex')}")
-st.sidebar.markdown(f"**Angiography Result:** 🔴 CAD Confirmed")
+# Main Content Area: Translated Key Health Variables Cards
+st.subheader("Key Health Vitals & Lab Results")
+st.markdown("<p style='color: #64748b; font-size: 0.95rem; margin-top: -0.5rem; margin-bottom: 1.5rem;'>Your essential measurements and what they mean for heart health.</p>", unsafe_allow_html=True)
 
-# Main Content Area: Translated Key Health Variables
-st.subheader("Key Health Vitals & Lab Results (Plain English)")
-st.markdown("<p style='color: #64748b; font-size: 0.95rem; margin-top: -0.5rem; margin-bottom: 1.5rem;'>Essential measurements and what they mean for heart health.</p>", unsafe_allow_html=True)
-
-# Map dataset columns to user-friendly labels and values
+# Map metrics
 key_metrics = [
     ("Heart Rate (Pulse)", p.get("PR"), "Measures how fast your heart beats. A normal resting heart rate is typically between 60 and 100 beats per minute."),
     ("Blood Pressure", p.get("BP"), simplify_term.CAD_MEANING.get("high blood pressure")),
@@ -70,36 +70,3 @@ for idx, (label, val, explanation) in enumerate(key_metrics, 1):
         <p style="color: #334155; font-size: 0.95rem; margin-top: 0.4rem; margin-bottom: 0; line-height: 1.5;">{explanation}</p>
     </div>
     """, unsafe_allow_html=True)
-
-# Main Content Area: Clinical Findings Cards
-st.markdown("---")
-st.subheader("Clinical Findings, Explained")
-
-FINDINGS = {
-    "HTN": "hypertension", "DM": "diabetes mellitus", "DLP": "dyslipidemia", "Dyspnea": "dyspnea",
-    "Edema": "edema", "Typical Chest Pain": "angina", "CHF": "heart failure",
-    "LVH": "left ventricular hypertrophy", "St Depression": "ST depression",
-    "St Elevation": "ST elevation", "Tinversion": "T wave inversion", "Q Wave": "Q wave"
-}
-
-present = [t for col, t in FINDINGS.items() if col in p and str(p[col]).strip() in ("Y", "1")]
-if str(p.get("Region RWMA", 0)) not in ("0", "0.0"): 
-    present.append("regional wall motion abnormality")
-
-if present:
-    for idx, t in enumerate(present, 1):
-        plain, exact = simplify_term.simplify(t)
-        cad_note = simplify_term.CAD_MEANING.get(plain, simplify_term.FALLBACK)
-        
-        st.markdown(f"""
-        <div class="card">
-            <div style="display: flex; align-items: center; margin-bottom: 0.4rem;">
-                <span class="badge" style="background-color: #fee2e2; color: #991b1b;">{idx}</span>
-                <span style="font-size: 0.85rem; color: #64748b;">Doctor's word: <b>{t}</b></span>
-            </div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-top: 0.2rem;">{plain.capitalize()}</div>
-            <p style="color: #334155; font-size: 0.95rem; margin-top: 0.4rem; margin-bottom: 0; line-height: 1.5;">{cad_note}</p>
-        </div>
-        """, unsafe_allow_html=True)
-else:
-    st.info("None of the trackable clinical findings were listed as positive for this patient record.")
