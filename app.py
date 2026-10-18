@@ -5,15 +5,14 @@ import simplify_term  # Imports your backend file
 
 st.set_page_config(page_title="SimplyStats - CAD Health Assistant", page_icon="🫀", layout="wide")
 
-# Custom CSS styling matching the design
+# Custom CSS styling
 st.markdown("""
     <style>
     .main-title { font-size: 2.2rem; font-weight: 700; color: #1e293b; margin-bottom: 0.2rem; }
-    .subtitle { font-size: 1rem; color: #64748b; margin-bottom: 1rem; }
+    .subtitle { font-size: 1rem; color: #64748b; margin-bottom: 1.5rem; }
     .card { background-color: #ffffff; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; margin-bottom: 1.2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .vitals-box { background-color: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
     .disclaimer { background-color: #f1f5f9; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; color: #475569; margin-bottom: 1.5rem; }
-    .badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #fef2f2; color: #991b1b; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; background-color: #e0f2fe; color: #0369a1; border-radius: 50%; font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -46,22 +45,35 @@ st.sidebar.markdown(f"**Patient Index:** `{selected_row_idx}`")
 st.sidebar.markdown(f"**Age:** {p.get('Age')} | **Sex:** {p.get('Sex')}")
 st.sidebar.markdown(f"**Angiography Result:** 🔴 CAD Confirmed")
 
-# Main Content Area: Vitals & Risk Factors Summary Panel
-st.subheader("Patient Vitals & Risk Factors")
-st.markdown("<p style='color: #64748b; font-size: 0.95rem; margin-top: -0.5rem;'>Key measurements known to affect Coronary Artery Disease (CAD).</p>", unsafe_allow_html=True)
+# Main Content Area: Translated Key Health Variables
+st.subheader("Key Health Vitals & Lab Results (Plain English)")
+st.markdown("<p style='color: #64748b; font-size: 0.95rem; margin-top: -0.5rem; margin-bottom: 1.5rem;'>Essential measurements and what they mean for heart health.</p>", unsafe_allow_html=True)
 
-col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("Blood Pressure", f"{p.get('BP', 'N/A')}")
-col2.metric("BMI", f"{p.get('BMI', 0):.1f}" if pd.notnull(p.get('BMI')) else "N/A")
-col3.metric("Fasting Sugar", f"{p.get('FBS', 'N/A')} mg/dL")
-col4.metric("LDL (Bad Chol)", f"{p.get('LDL', 'N/A')} mg/dL")
-col5.metric("HDL (Good Chol)", f"{p.get('HDL', 'N/A')} mg/dL")
+# Map dataset columns to user-friendly labels and values
+key_metrics = [
+    ("Heart Rate (Pulse)", p.get("PR"), "Measures how fast your heart beats. A normal resting heart rate is typically between 60 and 100 beats per minute."),
+    ("Blood Pressure", p.get("BP"), simplify_term.CAD_MEANING.get("high blood pressure")),
+    ("Body Mass Index (BMI)", f"{p.get('BMI', 0):.1f}" if pd.notnull(p.get('BMI')) else "N/A", simplify_term.CAD_MEANING.get("body mass index")),
+    ("Fasting Blood Sugar", f"{p.get('FBS')} mg/dL" if pd.notnull(p.get('FBS')) else "N/A", simplify_term.CAD_MEANING.get("fasting blood sugar")),
+    ("LDL Cholesterol (Bad)", f"{p.get('LDL')} mg/dL" if pd.notnull(p.get('LDL')) else "N/A", simplify_term.CAD_MEANING.get("bad cholesterol")),
+    ("HDL Cholesterol (Good)", f"{p.get('HDL')} mg/dL" if pd.notnull(p.get('HDL')) else "N/A", simplify_term.CAD_MEANING.get("good cholesterol")),
+]
 
+for idx, (label, val, explanation) in enumerate(key_metrics, 1):
+    st.markdown(f"""
+    <div class="card">
+        <div style="display: flex; align-items: center; margin-bottom: 0.4rem;">
+            <span class="badge">{idx}</span>
+            <span style="font-size: 0.85rem; color: #64748b;">Metric: <b>{label}</b></span>
+        </div>
+        <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-top: 0.2rem;">Value: {val}</div>
+        <p style="color: #334155; font-size: 0.95rem; margin-top: 0.4rem; margin-bottom: 0; line-height: 1.5;">{explanation}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Main Content Area: Clinical Findings Cards
 st.markdown("---")
-
-# Main Content Area: Clinical Findings Explained Card-by-Card
-st.subheader("Each finding, explained")
-st.markdown("<p style='color: #64748b; font-size: 0.95rem; margin-top: -0.5rem; margin-bottom: 1.5rem;'>The medical word your doctor might use is shown on each card.</p>", unsafe_allow_html=True)
+st.subheader("Clinical Findings, Explained")
 
 FINDINGS = {
     "HTN": "hypertension", "DM": "diabetes mellitus", "DLP": "dyslipidemia", "Dyspnea": "dyspnea",
@@ -82,7 +94,7 @@ if present:
         st.markdown(f"""
         <div class="card">
             <div style="display: flex; align-items: center; margin-bottom: 0.4rem;">
-                <span class="badge">{idx}</span>
+                <span class="badge" style="background-color: #fee2e2; color: #991b1b;">{idx}</span>
                 <span style="font-size: 0.85rem; color: #64748b;">Doctor's word: <b>{t}</b></span>
             </div>
             <div style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin-top: 0.2rem;">{plain.capitalize()}</div>
