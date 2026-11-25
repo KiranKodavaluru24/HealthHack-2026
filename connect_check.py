@@ -29,9 +29,7 @@ with zipfile.ZipFile(zip_path) as z:
 # Load dataset
 df = pd.read_excel(Path("data") / xlsx, sheet_name=0)
 
-print("\n====================================")
 print(" DATASET CONNECTION SUCCESSFUL")
-print("====================================")
 
 print(f"Patients loaded : {df.shape[0]}")
 print(f"Columns loaded  : {df.shape[1]}")
@@ -43,7 +41,6 @@ if "Cath" in df.columns:
     normal_count = (df["Cath"].astype(str).str.strip() == "Normal").sum()
 
     print("\nPatient Distribution")
-    print("--------------------")
     print(f"CAD Patients    : {cad_count}")
     print(f"Normal Patients : {normal_count}")
 
@@ -59,7 +56,6 @@ HEALTH_VARIABLES = {
 }
 
 print("\nKey Health Variables")
-print("--------------------")
 
 for col, meaning in HEALTH_VARIABLES.items():
     if col in df.columns:
@@ -67,7 +63,6 @@ for col, meaning in HEALTH_VARIABLES.items():
 
 # Basic statistics
 print("\nSelected Dataset Statistics")
-print("---------------------------")
 
 for col in ["Age", "BMI", "FBS", "LDL", "HDL", "TG"]:
     if col in df.columns:
@@ -82,12 +77,10 @@ for col in ["Age", "BMI", "FBS", "LDL", "HDL", "TG"]:
 missing_values = df.isna().sum().sum()
 
 print("\nData Quality Check")
-print("------------------")
 print(f"Missing values: {missing_values}")
 
 # Preview of dataset
 print("\nFirst 3 Records")
-print("---------------")
 print(df.head(3).to_string(index=False))
 
 print("\nReady for model training and medical-term explanations.")
